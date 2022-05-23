@@ -1,0 +1,2 @@
+# PredicateCalculus
+ GOFAI algorithms
