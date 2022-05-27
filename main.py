@@ -1,7 +1,19 @@
+from unittest import result
+
+
 class Term:
     type_ : str
     data : str
     args_ : list()
+
+    def andTerm(self, term):
+        return self
+
+    def orTerm(self, term):
+        return self
+
+    def notTerm(self, term):
+        return self
 
     # A term is initialized with:
     # 1. Data(data) which is the content of the term.
@@ -28,6 +40,7 @@ class Term:
         else:
             return "_"
 
+
 # this function return general unifier of two terms
 def unify(term_1: Term, term_2: Term):
     eq = [[term_1, term_2]]
@@ -36,15 +49,16 @@ def unify(term_1: Term, term_2: Term):
         ab = eq.pop()
         if repr(ab[0]) != repr(ab[1]):
             if ab[0].type_ == "VARIABLE":
-                subset[ab[0]] = ab[1]
-
+                subset[repr(ab[0])] = ab[1]
+                if ab[1].type_ == "PREDICATE" and varInPredicate(ab[0], ab[1]):
+                    return (subset, False)
             elif ab[1].type_ == "VARIABLE":
-                subset[ab[1]] = ab[0]
-
+                subset[repr(ab[1])] = ab[0]
+                if ab[0].type_ == "PREDICATE" and varInPredicate(ab[1], ab[0]):
+                    return (subset, False)             
             elif ab[0].type_ == "PREDICATE" and ab[1].type_ == "PREDICATE"\
                 and (ab[0].data == ab[1].data) and (len(ab[0].args_) == len(ab[1].args_)):
                 n = len(ab[0].args_)
-                
                 for i in range(n):
                     eq.append([ab[0].args_[i], ab[1].args_[i]])
             else:
@@ -52,23 +66,40 @@ def unify(term_1: Term, term_2: Term):
     return (subset, True)
 
 
-def varInPredicate(varTerm: Term, term_: Term):
-    queue = term_.args_.copy()
+def varInPredicate(varTerm: Term, predTerm: Term):
+    queue = predTerm.args_.copy()
     while len(queue) > 0:
-        pass 
+        head = queue.pop()
+        if (varTerm.data == head.data) and head.type_ == "VARIABLE":
+            return True
+        elif head.type_ == "PREDICATE":
+            queue += head.args_.copy()
+        else:
+            continue
+    return False
+
+def resolve(facts, parent_term, childTerm):
     pass
 
 
 if __name__ == "__main__":
-    term_1 = Term("X", "PREDICATE", [Term("P", "PREDICATE", [Term("X", "VARIABLE", [])]), Term("2", "ATOM", [])])
-    term_2 = Term("X", "PREDICATE", [Term("P", "PREDICATE", [Term("2", "ATOM", [])]), Term("X", "VARIABLE", [])])
-    term_3 = Term("X", "PREDICATE", [Term("X", "VARIABLE", []), Term("Y", "VARIABLE", [])])
+    term_1 = Term("Q", "PREDICATE", [Term("P", "PREDICATE", [Term("X", "VARIABLE", [])]), Term("2", "ATOM", [])])
+    term_2 = Term("Q", "PREDICATE", [Term("P", "PREDICATE", [Term("X", "VARIABLE", [])]), Term("X", "VARIABLE", [])])
+    term_3 = Term("Q", "PREDICATE", [Term("X", "VARIABLE", []), Term("Y", "VARIABLE", [])])
     # source = Term("X", "VARIABLE", [])
     # target = Term("2", "ATOM", [])
     # print(f"{source} :: {target} :: {term_1}")
     # c = replace(source, target, term_1)
     # print(c)
     # print(term_1)
-    print(f"{term_3} :: {term_1}")
-    print(unify(term_3, term_1))
+    print(f"{term_2} :: {term_1}")
+    # print(unify(term_2, term_1))
+    result = unify(term_2, term_1)
+    print(f"Substitution set: {result[0]}\nCan be unified? {result[1]}")
+    # print(
+    #     varInPredicate(
+    #         Term("X", "VARIABLE", []), 
+    #         Term("Q", "PREDICATE", [Term("P", "PREDICATE", [Term("X", "VARIABLE", [])]), Term("Y", "VARIABLE", [])])
+    #         )
+    #     )
 
